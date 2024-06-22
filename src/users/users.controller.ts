@@ -1,7 +1,8 @@
 import { Get, Controller, Param, Post, Body, InternalServerErrorException, BadRequestException, ParseIntPipe, NotFoundException, Put, Delete } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserEntity } from './model/userEntity';
-import { CreateUserDtos, UpdateUserDto } from './model/UserDtos';
+import { CreateUserDtos, UpdateUserDto, UserResponseDto } from './model/UserDtos';
+
 
 @Controller('users')
 export class UsersController {
@@ -56,6 +57,15 @@ export class UsersController {
         throw new NotFoundException(error.message);
       }
       throw error; // Throw other exceptions for global exception handling
+    }
+  }
+  @Post('login')
+  async loginUser(@Body() credentials: { email: string; password: string }): Promise<{ accessToken: string }> {
+    try {
+      const jwtToken = await this.userService.logInUser(credentials.email, credentials.password);
+      return { accessToken: jwtToken };
+    } catch (error) {
+      throw new NotFoundException(error.message);
     }
   }
 }

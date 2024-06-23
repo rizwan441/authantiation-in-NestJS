@@ -130,4 +130,10 @@ export class UsersService {
       throw new HttpException(`Wrong credentials`, HttpStatus.UNAUTHORIZED);
     }
   }
+  async updateUserRole(id:number, user:UpdateUserDto){
+    const  updatedUser=this.userRepository.update(id,user)
+
+    return  updatedUser;
+
+  }
 }

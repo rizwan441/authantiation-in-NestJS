@@ -1,13 +1,17 @@
-import { Get, Controller, Param, Post, Body, InternalServerErrorException, BadRequestException, ParseIntPipe, NotFoundException, Put, Delete } from '@nestjs/common';
+import { Get, Controller, Param, Post, Body, InternalServerErrorException, BadRequestException, ParseIntPipe, NotFoundException, Put, Delete, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserEntity } from './model/userEntity';
-import { CreateUserDtos, UpdateUserDto, UserResponseDto } from './model/UserDtos';
+import { CreateUserDtos, UpdateUserDto, UserResponseDto, userRole } from './model/UserDtos';
+import { HasRoles } from 'src/auth/decurator/role.decurator';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
 
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
-
+  @HasRoles(userRole.Admin)
+  @UseGuards(JwtAuthGuard,RolesGuard)
   @Get()
   async getAllUsers(): Promise<UserEntity[]> {
     try {
@@ -47,6 +51,8 @@ export class UsersController {
       throw new NotFoundException(error.message);
     }
   }
+  @HasRoles('admin')
+  @UseGuards(JwtAuthGuard,RolesGuard)
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<UserEntity> {
     try {
@@ -66,6 +72,18 @@ export class UsersController {
       return { accessToken: jwtToken };
     } catch (error) {
       throw new NotFoundException(error.message);
+    }
+  }
+
+
+  @Put(':id/role')
+  @HasRoles(userRole.Admin)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async updateUserRole(@Param('id') id: string, @Body() user: UpdateUserDto) {
+    try {
+      return await this.userService.updateUserRole(Number(id), user);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
   }
 }
